@@ -71,7 +71,7 @@ typedef struct {
 ////////////////////Test Variable////////////////////
 //#define IN_FILE_NAME "lengthFixed.pcap"
 //#define IN_FILE_NAME "validate-parallel-sessions.pcap"
-#define IN_FILE_NAME "lengthFixed.pcap"
+#define IN_FILE_NAME "valicate-802.1q.pcap"
 #define OUT_FILE_NAME "tcpAnalysis.txt"
 #define TEST_FILE_NAME "test.txt"
 
@@ -138,6 +138,11 @@ void Parse_Ethernet_Frame(Pcap_Packet *pcap, Ethernet_Frame *eth) {
 //Output: IPv4 Packet ipv4
 //Return: -1 means no ipv4 packet in frame, 0 means sucess.
 int Parse_IPv4_Packet(Ethernet_Frame *eth, IPv4_Packet *ipv4) {
+        if (eth->payload[0] == 0x81 && eth->payload[1] != 0x00) {
+                eth->payload += 4;
+                eth->payload_len -= 4;
+                printf("VLAN!!!!\n");
+        }
         if (eth->payload[0] != 0x08 || eth->payload[1] != 0x00) {
                 //No IPv4 packet contained in the ethernet frame.
                 return -1;
@@ -219,8 +224,6 @@ int main(int argc, char* argv[]) {
                         //No need to process the SYN packet sent by client.
                         continue;
                 }
-                
-
                 int t = 0;
                 while (t < Num_Tcps) {
                         if (*(uint32_t*)(pi.ip_src) == *(uint32_t*)(Tcps[t].ip_server) && *(uint32_t*)(pi.ip_dest) ==  *(uint32_t*)(Tcps[t].ip_client)) {
@@ -249,9 +252,6 @@ int main(int argc, char* argv[]) {
                 //Print_TCP_Header(&pt);
         }
         printf("%u \n", Num_Tcps);
-        for (int i = 0; i < Num_Tcps; i++) {
-                printf("%u\t%u\t%u\t%u\t%.3Lf\n", Tcps[i].port_client, Tcps[i].num_packet, Tcps[i].traffic_ip, Tcps[i].traffic_user, Tcps[i].duration);
-        }
         
         //Start to print the result
         fprintf(out_file, "TCP_session_count, serverIP, clientIP, serverPort, clientPort, num_of_packetSent(server->client), TotalIPtrafficBytesSent(server->client), TotaluserTrafficBytesSent(server->client), sessionDuration, bits/s_IPlayerThroughput(server->client), bits/s_Goodput(server->client)\n=========================================================================================================================\n");
