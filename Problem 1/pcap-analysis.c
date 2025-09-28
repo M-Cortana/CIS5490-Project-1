@@ -189,10 +189,10 @@ int Parse_TCP_Packet(IPv4_Packet *ipv4, TCP_Packet *tcp) {
 TCP_Connection Tcps[1024];
 uint32_t Num_Tcps;
 int main(int argc, char* argv[]) {
-        //char in_file_name = argv[2];
-        //char out_file_name = argv[3];
-        char in_file_name[128] = IN_FILE_NAME;
-        char out_file_name[128] = OUT_FILE_NAME;
+        char *in_file_name = argv[2];
+        char *out_file_name = argv[3];
+        //char in_file_name[128] = IN_FILE_NAME;
+        //char out_file_name[128] = OUT_FILE_NAME;
         FILE *in_file = fopen(in_file_name, "rb");
         FILE *out_file = fopen(out_file_name, "w");
         freopen(TEST_FILE_NAME, "w", stdout);
