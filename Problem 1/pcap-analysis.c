@@ -69,9 +69,9 @@ typedef struct {
 } TCP_Connection;
 
 ////////////////////Test Variable////////////////////
-//#define IN_FILE_NAME "lengthFixed.pcap"
+#define IN_FILE_NAME "lengthFixed.pcap"
 //#define IN_FILE_NAME "validate-parallel-sessions.pcap"
-#define IN_FILE_NAME "valicate-802.1q.pcap"
+//#define IN_FILE_NAME "valicate-802.1q.pcap"
 #define OUT_FILE_NAME "tcpAnalysis.txt"
 #define TEST_FILE_NAME "test.txt"
 
@@ -105,6 +105,17 @@ void Print_Large_Data(uint8_t *data, uint32_t len) {
 
 ////////////////////Global Variables////////////////////
 Pcap_Global_Header Global_Header;
+const uint8_t IP_Server_List[64][4] = {
+        {10,168,207,106},
+        {10,168,207,107},
+        {10,168,207,108},
+        {10,168,207,109}
+};
+const uint8_t IP_Client_List[16][4] = {
+        {192,11,68,196}
+};
+#define NUM_IP_CLIENT 1
+#define NUM_IP_SERVER 4
 
 ////////////////////Global Function////////////////////
 //Input: filepointer *fp.
@@ -138,10 +149,9 @@ void Parse_Ethernet_Frame(Pcap_Packet *pcap, Ethernet_Frame *eth) {
 //Output: IPv4 Packet ipv4
 //Return: -1 means no ipv4 packet in frame, 0 means sucess.
 int Parse_IPv4_Packet(Ethernet_Frame *eth, IPv4_Packet *ipv4) {
-        if (eth->payload[0] == 0x81 && eth->payload[1] != 0x00) {
+        if (eth->payload[0] == 0x81 && eth->payload[1] == 0x00) {
                 eth->payload += 4;
                 eth->payload_len -= 4;
-                printf("VLAN!!!!\n");
         }
         if (eth->payload[0] != 0x08 || eth->payload[1] != 0x00) {
                 //No IPv4 packet contained in the ethernet frame.
@@ -193,7 +203,8 @@ int main(int argc, char* argv[]) {
         Ethernet_Frame pe;
         IPv4_Packet pi;
         TCP_Packet pt;
-
+        uint8_t client_in_list = 0;
+        uint8_t server_in_list = 0;
         //Start to process the data
         while (Read_Packet(in_file, &pp) != -1) {
                 Parse_Ethernet_Frame(&pp, &pe);
@@ -208,6 +219,26 @@ int main(int argc, char* argv[]) {
                 if (pt.flag & TCP_FLAG_SYN) {
                         if (pt.flag & TCP_FLAG_ACK) {
                                 //Starts of a TCP session, server replies the SYN packet.
+                                client_in_list = 0;
+                                server_in_list = 0;
+                                for (int i = 0; i < NUM_IP_CLIENT; i++) {
+                                        if (*(uint32_t*)(IP_Client_List[i]) == *(uint32_t*)(pi.ip_dest)) {
+                                                client_in_list = 1;
+                                                break;
+                                        }
+                                }
+                                for (int i = 0; i < NUM_IP_SERVER; i++) {
+                                        if (*(uint32_t*)(IP_Server_List[i]) == *(uint32_t*)(pi.ip_src)) {
+                                                server_in_list = 1;
+                                                break;
+                                        }
+                                }
+
+                                if (client_in_list == 0 || server_in_list == 0) {
+                                        continue;
+                                        //Do not record this TCP connection
+                                }
+
                                 Tcps[Num_Tcps].start_sec = pp.ts_sec;
                                 Tcps[Num_Tcps].start_usec = pp.ts_usec;
 

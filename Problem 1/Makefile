@@ -1,2 +1,2 @@
 default:
-	gcc -o analysis pcap-analysis.c 
+	gcc -o -Ofast analysis pcap-analysis.c 
