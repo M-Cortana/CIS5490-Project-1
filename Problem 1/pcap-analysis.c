@@ -69,9 +69,9 @@ typedef struct {
 } TCP_Connection;
 
 ////////////////////Test Variable////////////////////
-#define IN_FILE_NAME "lengthFixed.pcap"
+//#define IN_FILE_NAME "lengthFixed.pcap"
 //#define IN_FILE_NAME "validate-parallel-sessions.pcap"
-//#define IN_FILE_NAME "valicate-802.1q.pcap"
+#define IN_FILE_NAME "valicate-802.1q.pcap"
 #define OUT_FILE_NAME "tcpAnalysis.txt"
 #define TEST_FILE_NAME "test.txt"
 
